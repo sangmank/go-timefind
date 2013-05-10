@@ -1,3 +1,13 @@
+/*
+ Copyright (C) 2013 Sangman Kim
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at
+
+ http://mozilla.org/MPL/2.0/. 
+*/
+
 package timefind
 
 import (
@@ -17,6 +27,12 @@ func (q *TQuery) Match(t time.Time) bool {
 
 func (q *TQuery) Next(t time.Time) time.Time {
 	var startT time.Time
+
+	if q.minT != nil {
+		if q.minT.After(t) {
+			t = *q.minT
+		}
+	}
 
 	/* start from the next minute */
 	startT = time.Unix(((t.Unix()/60)+1)*60, 0)

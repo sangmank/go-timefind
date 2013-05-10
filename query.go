@@ -1,3 +1,13 @@
+/*
+ Copyright (C) 2013 Sangman Kim
+
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at
+
+ http://mozilla.org/MPL/2.0/. 
+*/
+
 package timefind
 
 import (
@@ -66,8 +76,8 @@ func (f TQueryField) Name() string {
 
 /* intermediate node for logical relationship */
 type TQuery struct {
-	fields     []*bitset.BitSet
-	minT, maxT *time.Time
+	fields  []*bitset.BitSet
+	minT    *time.Time
 }
 
 var ErrEmpty = fmt.Errorf("No date is available")
@@ -84,7 +94,6 @@ func newQuery() *TQuery {
 	}
 
 	q.minT = nil
-	q.maxT = nil
 
 	return q
 }
@@ -265,31 +274,12 @@ func (q *TQuery) WeekDays(days string) (*TQuery, error) {
 	return q.parseStr(DAY_WEEK, days)
 }
 
-func (q *TQuery) Before(t time.Time) (*TQuery, error) {
-	q.maxT = &t
-	if q.IsEmpty() {
-		return nil, ErrEmpty
-	}
-	return q, nil
-}
-
 func (q *TQuery) After(t time.Time) (*TQuery, error) {
 	q.minT = &t
 	if q.IsEmpty() {
 		return nil, ErrEmpty
 	}
 	return q, nil
-}
-
-func (q *TQuery) Between(t1, t2 time.Time) *TQuery {
-	if t1.Before(t2) {
-		q.minT = &t1
-		q.maxT = &t2
-	} else {
-		q.minT = &t2
-		q.maxT = &t1
-	}
-	return q
 }
 
 func (q *TQuery) IsEmpty() bool {
@@ -299,14 +289,10 @@ func (q *TQuery) IsEmpty() bool {
 		}
 	}
 
-	if q.maxT != nil && q.minT != nil && q.maxT.Before(*q.minT) {
-		return true
-	}
-
 	return false
 }
 
-func andMinMaxT(q1, q2 *TQuery) (minT, maxT *time.Time) {
+func andMinT(q1, q2 *TQuery) (minT *time.Time) {
 	/* setting minT */
 	if q1.minT == nil {
 		minT = q2.minT
@@ -319,19 +305,7 @@ func andMinMaxT(q1, q2 *TQuery) (minT, maxT *time.Time) {
 			minT = q1.minT
 		}
 	}
-
-	/* setting maxT */
-	if q1.maxT == nil {
-		maxT = q2.maxT
-	} else if q2.maxT == nil {
-		maxT = q1.maxT
-	} else {
-		if q1.maxT.After(*q2.maxT) {
-			maxT = q2.maxT
-		} else {
-			maxT = q1.maxT
-		}
-	}
+	
 	return
 }
 
@@ -342,7 +316,7 @@ func And(q1, q2 *TQuery) (*TQuery, error) {
 		q.fields[i] = q1.fields[i].Intersection(q2.fields[i])
 	}
 
-	q.minT, q.maxT = andMinMaxT(q1, q2)
+	q.minT = andMinT(q1, q2)
 
 	if q.IsEmpty() {
 		return nil, ErrEmpty
