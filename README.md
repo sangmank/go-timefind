@@ -33,15 +33,16 @@ Firstly, you need to build a query in time domain:
     # or, in one call
     q2, err = timefind.NewFromString("30 19 * * 1-5")
 
-    # 7PM on the first day of every month 
-    q3, _ = timefind.Day(1)
+    # 7PM on the first day of every two months
+    q3, err = timefind.Day(1)
+    q3.Months("*/2")
     q3.Hour(19)
     q3.Minute(0)
     # or, in one call
-    q3, err = timefind.NewFromString("0 19 1 * *")
+    q3, err = timefind.NewFromString("0 19 1 */2 *")
 
     # And'ing two rules.
-    q = timefind.And(q1, q2)
+    q, err = timefind.And(q1, q2)
 
 Setting limits
 ---------------
