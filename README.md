@@ -24,14 +24,14 @@ Firstly, you need to build a query in time domain:
     q1, err = timefind.Hour(19)
     q1.Minute(10,20)
     # or, in one call like crontab rule
-    q1, err = timefind.NewFromString("10,20 19 * * *")
+    q1, err = timefind.New("10,20 19 * * *")
 
     # Every weekday 7:30 PM
     q2, err = timefind.WeekDays("1-5")
     q2.Hour(19)
     q2.Minute(30)
     # or, in one call
-    q2, err = timefind.NewFromString("30 19 * * 1-5")
+    q2, err = timefind.New("30 19 * * 1-5")
 
     # 7PM on the first day of every two months
     q3, err = timefind.Day(1)
@@ -39,7 +39,7 @@ Firstly, you need to build a query in time domain:
     q3.Hour(19)
     q3.Minute(0)
     # or, in one call
-    q3, err = timefind.NewFromString("0 19 1 */2 *")
+    q3, err = timefind.New("0 19 1 */2 *")
 
     # And'ing two rules.
     q, err = timefind.And(q1, q2)

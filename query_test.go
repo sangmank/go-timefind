@@ -96,7 +96,7 @@ func TestTQuery(t *testing.T) {
 		t.Error("2 should be overlapped")
 	}
 
-	q, err = NewFromString("* * * 1 *")
+	q, err = New("* * * 1 *")
 	if err != nil {
 		t.Errorf("Error: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestTQuery(t *testing.T) {
 		t.Errorf("Expected: 0,30 3 * 1 *, Give: %s", q.ToString())		
 	}
 
-	q, err = NewFromString("30,60 * * 1 *")
+	q, err = New("30,60 * * 1 *")
 	if err == nil {
 		t.Errorf("No error, but we expected an error %s", q.ToString())
 	}

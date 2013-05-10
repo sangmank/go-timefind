@@ -359,7 +359,7 @@ func (q *TQuery) ToString() string {
 	return strings.Join(strs, " ")
 }
 
-func NewFromString(s string) (*TQuery, error) {
+func New(s string) (*TQuery, error) {
 	q := newQuery()
 	strs := strings.Split(s, " ")
 	if len(strs) != int(FIELD_END) {
