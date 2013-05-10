@@ -13,10 +13,10 @@ import (
 type TQueryField int
 
 const (
-	MONTH TQueryField = iota
-	DAY
+	MINUTE TQueryField = iota
 	HOUR
-	MINUTE
+	DAY
+	MONTH 
 	DAY_WEEK
 	FIELD_END
 )
@@ -54,12 +54,12 @@ func (f TQueryField) Index(n int) int {
 
 var fieldNames = []string{"month", "day", "hour", "minute", "dayofweek"}
 
-func (f TQueryField) ToString() string {
+func (f TQueryField) Name() string {
 	i := int(f)
 	if i < len(fieldNames) {
 		return fieldNames[i]
 	} else {
-		log.Fatal("ToString out of range")
+		log.Fatal("Name out of range")
 	}
 	return ""
 }
@@ -76,7 +76,7 @@ func newQuery() *TQuery {
 	q := new(TQuery)
 	q.fields = make([]*bitset.BitSet, FIELD_END)
 
-	for f := MONTH; f < FIELD_END; f++ {
+	for f := TQueryField(0); f < FIELD_END; f++ {
 		min, max := f.GetLimit()
 		set := bitset.New(uint(max - min + 1))
 		set.SetAll()
@@ -151,7 +151,7 @@ func (q *TQuery) intersection(f TQueryField, data ...int) (*TQuery, error) {
 
 	for _, datum := range data {
 		if datum > max || datum < min {
-			return nil, fmt.Errorf("%s should be between %d and %d. Given: %d", f.ToString(), min, max, datum)
+			return nil, fmt.Errorf("%s should be between %d and %d. Given: %d", f.Name(), min, max, datum)
 		}
 		newset.Set(uint(f.Index(datum)))
 	}
@@ -199,6 +199,8 @@ func (q *TQuery) parseStr(f TQueryField, selector string) (*TQuery, error) {
 	}
 
 	if patternRegular.FindString(selector) != "" {
+		// patterns like */2, */3
+		// interval becomes 2 or 3 in these cases
 		interval, err := strconv.ParseInt(selector[2:], 10, 32)
 		if err != nil {
 			return nil, err
@@ -215,12 +217,23 @@ func (q *TQuery) parseStr(f TQueryField, selector string) (*TQuery, error) {
 				// range
 				minRange, _ := strconv.ParseInt(values[1], 10, 32)
 				maxRange, _ := strconv.ParseInt(values[2], 10, 32)
+				if int(minRange) < min || int(minRange) > max {
+					return nil, fmt.Errorf("Min out of range %d. expected [%d, %d]", minRange, min, max)
+				}
+				if int(maxRange) < min || int(maxRange) > max {
+					return nil, fmt.Errorf("Max out of range %d. expected [%d, %d]", minRange, min, max)
+				}
+				
 				for i := minRange; i <= maxRange; i++ {
 					newset.Set(uint(f.Index(int(i))))
 				}
 			} else {
 				// single value
 				val, _ := strconv.ParseInt(r, 10, 32)
+				if int(val) < min || int(val) > max {
+					return nil, fmt.Errorf("Out of range %d. expected [%d, %d]", val, min, max)
+				}
+				
 				newset.Set(uint(f.Index(int(val))))
 			}
 		}
@@ -335,5 +348,56 @@ func And(q1, q2 *TQuery) (*TQuery, error) {
 		return nil, ErrEmpty
 	}
 
+	return q, nil
+}
+
+func bitsetToString(set *bitset.BitSet, f TQueryField) string {
+	min, _ := f.GetLimit()
+
+	if set.Len() == 0 {
+		return ""
+	}
+	
+	if set.Len() == set.Count() {
+		return "*"
+	}
+
+	if set.Len() == 1 {
+		index, _ := set.LowestSetIndex()
+		return string(index)
+	}
+	
+	indices := set.SetIndices()
+	idxstrs := make([]string, len(indices))
+	for i := range idxstrs  {
+		idxstrs[i] = fmt.Sprintf("%d", indices[i] + uint(min))
+	}
+	return strings.Join(idxstrs, ",")
+}
+
+func (q *TQuery) ToString() string {
+	strs := make([]string, len(q.fields))
+	
+	for i, _ := range q.fields {
+		strs[i] = bitsetToString(q.fields[i], TQueryField(i))
+	}
+	
+	return strings.Join(strs, " ")
+}
+
+func NewFromString(s string) (*TQuery, error) {
+	q := newQuery()
+	strs := strings.Split(s, " ")
+	if len(strs) != int(FIELD_END) {
+		return nil, fmt.Errorf("There should be five entries (minute, hour, day of month, month, day of week)")
+	}
+	
+	for i, field := range strs {
+		_, err := q.parseStr(TQueryField(i), field)
+		if err != nil {
+			return nil, err
+		}
+	}
+	
 	return q, nil
 }

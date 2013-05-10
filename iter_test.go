@@ -22,19 +22,19 @@ func TestNext(t *testing.T) {
 
 	t1 := q.Next(tv)
 	if t1.Hour() != 3 {
-		t.Errorf("hour should be 3, not %d", t1.Hour())
+		t.Errorf("hour should be 3, not %d (%v)", t1.Hour(), t1)
 	}
 	if t1.Day() != 3 {
-		t.Errorf("day should be 3, not %d", t1.Day())
+		t.Errorf("day should be 3, not %d (%v)", t1.Day(), t1)
 	}
 	if t1.Month() != 1 {
-		t.Errorf("month should be 1, not %d", t1.Month())
+		t.Errorf("month should be 1, not %d (%v)", t1.Month(), t1)
 	}
 	if t1.Year() != 2006 {
-		t.Errorf("year should be 2006, not %d", t1.Year())
+		t.Errorf("year should be 2006, not %d (%v)", t1.Year(), t1)
 	}
 	if t1.Minute() != 4 {
-		t.Errorf("minute should be 0, not %d", t1.Minute())
+		t.Errorf("minute should be 0, not %d (%v)", t1.Minute(), t1)
 	}
 
 	tq := q.Next(q.Next(tv))

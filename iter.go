@@ -6,7 +6,7 @@ import (
 )
 
 func (q *TQuery) Match(t time.Time) bool {
-	idxs := []int{int(t.Month()), t.Day(), t.Hour(), t.Minute(), int(t.Weekday())}
+	idxs := []int{t.Minute(), t.Hour(), t.Day(), int(t.Month()), int(t.Weekday())}
 	for i, idx := range idxs {
 		if !q.fields[i].Test(uint(idx)) {
 			return false
