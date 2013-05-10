@@ -21,16 +21,27 @@ Buiding time queries
 Firstly, you need to build a query in time domain:
 
     # daily schedule at both 7:10 PM and 7:20 PM (logically or'ed)
-    tq1 = timefind.Hour(19).Minute(10,20)
+    q1, err = timefind.Hour(19)
+    q1.Minute(10,20)
+    # or, in one call like crontab rule
+    q1, err = timefind.NewFromString("10,20 19 * * *")
 
     # Every weekday 7:30 PM
-    tq2 = timefind.WeekDays("1-5").Hour(19).Minute(30)
+    q2, err = timefind.WeekDays("1-5")
+    q2.Hour(19)
+    q2.Minute(30)
+    # or, in one call
+    q2, err = timefind.NewFromString("30 19 * * 1-5")
 
     # 7PM on the first day of every month 
-    tq3 = timefind.Day(1).Hour(19).Minute(0)
+    q3, _ = timefind.Day(1)
+    q3.Hour(19)
+    q3.Minute(0)
+    # or, in one call
+    q3, err = timefind.NewFromString("0 19 1 * *")
 
     # And'ing two rules.
-    tq = timefind.And(tq1, tq2)
+    q = timefind.And(q1, q2)
 
 Setting limits
 ---------------
